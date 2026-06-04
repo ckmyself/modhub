@@ -7,14 +7,12 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "DATABASE_PROVIDER=postgres DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npm run db:switch && DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy npx prisma generate && next build",
+    "build": "DATABASE_PROVIDER=postgres npm run db:switch && npx prisma generate && next build",
     "start": "next start",
     "db:switch": "node scripts/switch-db.js",
-    "db:seed": "npm run db:switch && npx tsx prisma/seed.ts",
-    "db:push": "npm run db:switch && npx prisma db push",
-    "db:migrate": "npm run db:switch && npx prisma migrate dev",
-    "db:studio": "npx prisma studio",
-    "db:deploy": "npm run db:switch && npx prisma migrate deploy"
+    "db:seed": "npx prisma db push && npx tsx prisma/seed.ts",
+    "db:push": "npx prisma db push",
+    "db:studio": "npx prisma studio"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -35,6 +33,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.1.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
     "typescript": "^5"
