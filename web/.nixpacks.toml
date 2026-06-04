@@ -1,3 +1,6 @@
+[phases]
+enable = ["setup", "install", "build"]
+
 [phases.setup]
 nixPkgs = ["nodejs_20", "openssl"]
 
