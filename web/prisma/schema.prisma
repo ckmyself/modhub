@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Game {
+  id          Int         @id @default(autoincrement())
+  slug        String      @unique
+  name        String
+  description String?
+  iconUrl     String?
+  coverUrl    String?
+  developer   String?
+  publisher   String?
+  releaseDate DateTime?
+  modCount    Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  categories  Category[]
+  mods        Mod[]
+}
+
+model Category {
+  id       Int    @id @default(autoincrement())
+  gameId   Int
+  name     String
+  slug     String
+  modCount Int    @default(0)
+
+  game     Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  mods     Mod[]
+
+  @@unique([gameId, slug])
+}
+
+model Mod {
+  id            Int          @id @default(autoincrement())
+  gameId        Int
+  categoryId    Int?
+  name          String
+  slug          String?
+  summary       String
+  description   String?
+  author        String?
+  version       String?
+  downloadCount Int          @default(0)
+  viewCount     Int          @default(0)
+  rating        Float        @default(0)
+  ratingCount   Int          @default(0)
+  thumbnailUrl  String?
+  sourceUrl     String?
+  source        String?
+  isApproved    Boolean       @default(false)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  game          Game          @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  category      Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  tags          ModTag[]
+  versions      ModVersion[]
+  files         ModFile[]
+  reviews       Review[]
+  favorites     Favorite[]
+  modListEntries ModListEntry[]
+  uploaderId    Int?
+  uploader      User?         @relation("UploadedMods", fields: [uploaderId], references: [id])
+
+  @@index([gameId])
+  @@index([categoryId])
+  @@index([name])
+}
+
+model Tag {
+  id   Int     @id @default(autoincrement())
+  name String  @unique
+
+  mods ModTag[]
+}
+
+model ModTag {
+  modId Int
+  tagId Int
+
+  mod   Mod @relation(fields: [modId], references: [id], onDelete: Cascade)
+  tag   Tag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([modId, tagId])
+}
+
+model ModVersion {
+  id        Int      @id @default(autoincrement())
+  modId     Int
+  version   String
+  changelog String?
+  createdAt DateTime @default(now())
+
+  mod       Mod      @relation(fields: [modId], references: [id], onDelete: Cascade)
+  files     ModFile[]
+}
+
+model ModFile {
+  id           Int      @id @default(autoincrement())
+  modId        Int
+  modVersionId Int?
+  fileName     String
+  fileSize     Int
+  fileHash     String?
+  downloadUrl  String?
+  localPath    String?
+  installPath  String?
+  fileType     String   @default("archive")
+  isMain       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  mod          Mod           @relation(fields: [modId], references: [id], onDelete: Cascade)
+  modVersion   ModVersion?   @relation(fields: [modVersionId], references: [id], onDelete: SetNull)
+}
+
+model VerificationToken {
+  id         Int      @id @default(autoincrement())
+  identifier String
+  token      String   @unique
+  expires    DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([identifier])
+  @@index([token])
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String?
+  passwordHash  String?
+  image         String?
+  emailVerified DateTime?
+  role          String         @default("user")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  reviews       Review[]
+  favorites     Favorite[]
+  modLists      ModList[]
+  uploadedMods  Mod[]          @relation("UploadedMods")
+}
+
+model Account {
+  id                Int      @id @default(autoincrement())
+  userId            Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           Int      @id @default(autoincrement())
+  sessionToken String   @unique
+  userId       Int
+  expires      DateTime
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  modId     Int
+  userId    Int
+  rating    Int?
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  mod       Mod      @relation(fields: [modId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([modId, userId])
+}
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  modId     Int
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  mod       Mod      @relation(fields: [modId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, modId])
+}
+
+model ModList {
+  id        Int           @id @default(autoincrement())
+  userId    Int
+  name      String
+  summary   String?
+  isPublic  Boolean       @default(false)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entries   ModListEntry[]
+}
+
+model ModListEntry {
+  modListId Int
+  modId     Int
+
+  modList   ModList @relation(fields: [modListId], references: [id], onDelete: Cascade)
+  mod       Mod     @relation(fields: [modId], references: [id], onDelete: Cascade)
+
+  @@id([modListId, modId])
+}
