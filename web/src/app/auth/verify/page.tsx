@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function VerifyPage() {
+function VerifyContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const token = searchParams.get("token");
   const [status, setStatus] = useState<"verifying" | "success" | "error">("verifying");
   const [msg, setMsg] = useState("正在验证...");
@@ -79,5 +78,18 @@ export default function VerifyPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-sm mx-auto px-4 py-20 text-center">
+        <div className="w-12 h-12 mx-auto mb-4 rounded-full border-2 border-[var(--primary)] border-t-transparent animate-spin" />
+        <p className="text-[var(--muted)]">加载中...</p>
+      </div>
+    }>
+      <VerifyContent />
+    </Suspense>
   );
 }
