@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "next dev",
-    "build": "npm run db:switch && npx prisma generate && npx prisma db push && next build",
+    "build": "npm run db:switch && npx prisma generate && next build",
     "start": "next start",
     "postinstall": "npx prisma generate",
     "db:switch": "node scripts/switch-db.js",
